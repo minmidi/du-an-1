@@ -111,7 +111,7 @@ class HomePageController extends Controller
             $message->subject('Đặt hàng thành công');
         });
         //dd($booking);die;
-        return redirect()->back()->with('message', 'Bạn đã đặt phòng thành công');
+        return redirect()->back()->with('message', 'Bạn đã đặt phòng thành công, vui lòng kiếm tra mail của bạn');
     }
 
     /* CONTACT INDEX */
