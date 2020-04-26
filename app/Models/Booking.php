@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+
 class Booking extends Model
 {
      // gọi bảng trong model
@@ -17,6 +18,7 @@ class Booking extends Model
 
     public function scopeSearch($query, ...$colums)
     {
+        //$colums = ['name', 'email'];
         $keyWord = request()->search;
         foreach ($colums as $colum) {
             $query->orWhere($colum, 'like', "%$keyWord%");

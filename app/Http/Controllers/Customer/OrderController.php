@@ -25,7 +25,8 @@ class OrderController extends Controller
      */
     public function create()
     {
-        return view('customer.orders.create');
+        //return view('customer.orders.create');
+        return view('customer.pages.booking');
     }
 
     /**
@@ -37,6 +38,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $data = $request->only('name','email');
+        dd($data);
         Mail::send('customer.emails.order_success', $data, function ($message) use ($data) {
             $message->to($data['email'] ,$data['name']);
             $message->subject('Đặt hàng thành công');

@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Customer;
-use App\Models\WebSetting;
-use App\Models\About;
 use App\Models\Service;
 use App\Models\Room_type;
 use App\Models\Slider;
@@ -12,14 +10,13 @@ use App\Models\ClientContact;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class HomePageController extends Controller
 {
 
     /* DASHBOARD INDEX */
     public function homepage(Request $request) {
-        $settings = WebSetting::all();
-        $abouts = About::all();
         $services = Service::where('status',1)->get();
         $room_types = Room_type::orderby('created_at','desc')->limit(3)->get();
         $sliders = Slider::where('status',1)->orderby('created_at','desc')->limit(2)->get();
@@ -28,7 +25,7 @@ class HomePageController extends Controller
         //dd($services);die;
         //dd($services);die;
         // mình đang muốn hiển thị với satus = 1
-        return view('customer.pages.homepage',compact('settings','abouts','services','room_types','sliders'));
+        return view('customer.pages.homepage',compact('services','room_types','sliders'));
     }
 
 
@@ -36,23 +33,19 @@ class HomePageController extends Controller
 
     //Room list index
     public function room_list(Request $request) {
-        $settings = WebSetting::all();
-        $abouts = About::all();
         $room_types = Room_type::paginate(5);
         //dd($room_types);die;
-        return view('customer.pages.room-list',compact('settings','abouts','room_types'));
+        return view('customer.pages.room-list',compact('room_types'));
     }
 
     //Room view index
     public function room($id) {
-        $settings = WebSetting::all();
-        $abouts = About::all();
         $room_types = Room_type::find($id);
         $room_type = Room_type::limit(3)->get();
         $posts = Post::where('status',1)->paginate(4);
         //dd($room_type);die;
         //dd($room_types);die;
-        return view('customer.pages.room',compact('settings','abouts','room_types','room_type','posts'));
+        return view('customer.pages.room',compact('room_types','room_type','posts'));
     }
 
 
@@ -60,39 +53,32 @@ class HomePageController extends Controller
 
     //Blog list index
      public function blog() {
-        $settings = WebSetting::all();
-        $abouts = About::all();
+
         $posts = Post::where('status',1)->paginate(4);
         //dd($posts);die;
-        return view('customer.pages.post-list',compact('settings','abouts','posts'));
+        return view('customer.pages.post-list',compact('posts'));
     }
 
     //Blog view index
     public function blog_view($id) {
-        $settings = WebSetting::all();
-        $abouts = About::all();
         $posts = Post::find($id);
         $post = Post::where('status',1)->paginate(4);
         //dd($room_type);die;
         //dd($room_types);die;
-        return view('customer.pages.post',compact('settings','abouts','posts','post'));
+        return view('customer.pages.post',compact('posts','post'));
     }
 
 
      /* ABOUT INDEX */
 
     public function about() {
-        $settings = WebSetting::all();
-        $abouts = About::all();
-        return view('customer.pages.about',compact('settings','abouts'));
+        return view('customer.pages.about');
     }
 
 
      /* CONTACT INDEX */
     public function contact() {
-        $settings = WebSetting::all();
-        $abouts = About::all();
-        return view('customer.pages.contact',compact('settings','abouts'));
+        return view('customer.pages.contact');
     }
 
 
@@ -100,12 +86,10 @@ class HomePageController extends Controller
 
     // Booking get form
     public function booking() {
-        $settings = WebSetting::all();
-        $abouts = About::all();
         $room_types = Room_type::all();
         $room_detais = Room_type::orderby('created_at','desc')->limit(3)->get();
         //dd($room_detais);die;
-        return view('customer.pages.booking',compact('settings','abouts','room_types','room_detais'));
+        return view('customer.pages.booking',compact('room_types','room_detais'));
     }
 
     // Booking post form
@@ -117,10 +101,15 @@ class HomePageController extends Controller
             'number_phone' => 'required',
             'country' => 'required',
             'arrival_date' => 'required',
-            'departure_date' => 'required'
+            'departure_date' => 'required',
+            'room_type_id' => 'required|exists:room_types,id'
         ]);
-
-        $booking = Booking::join('room_types','room_types.id','=','bookings.room_type_id')->create($request->all());
+        $booking = Booking::create($request->all());
+        $booking->load('room_types');
+        Mail::send('customer.emails.order_success', compact('booking'), function ($message) use ($booking) {
+            $message->to($booking->email);
+            $message->subject('Đặt hàng thành công');
+        });
         //dd($booking);die;
         return redirect()->back()->with('message', 'Bạn đã đặt phòng thành công');
     }
